@@ -10,6 +10,18 @@ mod tests {
     use crate::roll_parser::execute_roll;
 
     #[test]
+    fn invalid_input() {
+        let result = execute_roll(".");
+        assert!(result.is_err());
+
+        let result = execute_roll("67 + 22 /");
+        assert!(result.is_err());
+
+        let result = execute_roll("(2+10/2)-((8+4)+5*)");
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn basic_arithmetic() {
         let result = execute_roll("67 + 22").unwrap();
         assert_eq!(result, 89);
