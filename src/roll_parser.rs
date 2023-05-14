@@ -1,3 +1,4 @@
+use pest::error::Error;
 use pest::iterators::Pairs;
 use pest::pratt_parser::PrattParser;
 use pest::Parser;
@@ -41,13 +42,9 @@ fn parse_roll(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>) -> i32 {
         .parse(pairs)
 }
 
-pub fn execute_roll(input: &str) -> i32 {
-    let parsed = match RollParser::parse(Rule::roll, input) {
-        Ok(mut pairs) => parse_roll(pairs.next().unwrap().into_inner(), &PRATT),
-        Err(e) => {
-            eprintln!("Parse failed: {:?}", e);
-            0
-        }
-    };
-    parsed
+pub fn execute_roll(input: &str) -> Result<i32, Error<Rule>> {
+    match RollParser::parse(Rule::roll, input) {
+        Ok(mut pairs) => Ok(parse_roll(pairs.next().unwrap().into_inner(), &PRATT)),
+        Err(e) => Err(e),
+    }
 }
