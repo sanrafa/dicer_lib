@@ -1,6 +1,8 @@
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+#[macro_use]
+extern crate anyhow;
 mod dice;
 mod roll_parser;
 
@@ -97,6 +99,11 @@ mod tests {
         assert!(result.is_ok());
         assert!(result.as_ref().unwrap() >= &1);
         assert!(result.as_ref().unwrap() <= &((2 * 6) + 2 / 3));
+
+        let result = execute_roll("1d12*2*(3/4)");
+        assert!(result.is_ok());
+        assert!(result.as_ref().unwrap() >= &0);
+        assert!(result.as_ref().unwrap() <= &(12 * 2 * (3 / 4)));
     }
     #[test]
     fn exploded_rolls() {

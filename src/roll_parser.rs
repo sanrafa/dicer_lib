@@ -1,5 +1,5 @@
 use super::dice::{explode, roll};
-use pest::error::Error;
+use anyhow::Result;
 use pest::iterators::Pairs;
 use pest::pratt_parser::PrattParser;
 use pest::Parser;
@@ -24,14 +24,11 @@ fn parse_roll(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>) -> i32 {
     pratt
         .map_primary(|p| match p.as_rule() {
             Rule::exploded => {
-                let dice_rule = p.into_inner().next();
-                if let Some(die) = dice_rule {
-                    let mut iter = die.into_inner().take(2);
-                    let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
-                    let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
-                    return explode(total, faces);
-                }
-                0
+                let die = p.into_inner().next().unwrap();
+                let mut iter = die.into_inner().take(2);
+                let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                return explode(total, faces);
             }
             Rule::dice => {
                 let mut iter = p.into_inner().take(2);
@@ -57,9 +54,9 @@ fn parse_roll(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>) -> i32 {
         .parse(pairs)
 }
 
-pub fn execute_roll(input: &str) -> Result<i32, Error<Rule>> {
+pub fn execute_roll(input: &str) -> Result<i32> {
     match RollParser::parse(Rule::roll, input) {
         Ok(mut pairs) => Ok(parse_roll(pairs.next().unwrap().into_inner(), &PRATT)),
-        Err(e) => Err(e),
+        Err(_) => Err(anyhow!("Error parsing input.")),
     }
 }
