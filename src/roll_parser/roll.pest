@@ -11,6 +11,6 @@ roll  =  _{ SOI ~ expr ~ EOI }
             neg      =  { "-" }
         primary  = _{ exploded | dice | int | "(" ~ expr ~ ")" }
             int      = @{ (ASCII_NONZERO_DIGIT ~ ASCII_DIGIT+ | ASCII_DIGIT) }
-            dice     = @{ int ~ "d" ~ int }
-            exploded = @{ dice ~ "!" }
+            dice     = ${ int ~ "d" ~ int }
+            exploded = ${ dice ~ "!" }
 

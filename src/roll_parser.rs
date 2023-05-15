@@ -1,3 +1,4 @@
+use super::dice::{explode, roll};
 use pest::error::Error;
 use pest::iterators::Pairs;
 use pest::pratt_parser::PrattParser;
@@ -22,8 +23,22 @@ lazy_static::lazy_static! {
 fn parse_roll(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>) -> i32 {
     pratt
         .map_primary(|p| match p.as_rule() {
-            Rule::exploded => 1, //todo
-            Rule::dice => 1,     //todo
+            Rule::exploded => {
+                let dice_rule = p.into_inner().next();
+                if let Some(die) = dice_rule {
+                    let mut iter = die.into_inner().take(2);
+                    let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                    let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                    return explode(total, faces);
+                }
+                0
+            }
+            Rule::dice => {
+                let mut iter = p.into_inner().take(2);
+                let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
+                roll(total, faces)
+            }
             Rule::int => p.as_str().parse::<i32>().unwrap(),
             Rule::expr => parse_roll(p.into_inner(), &PRATT),
             rule => unreachable!("Unexpected token: {:?}", rule),
