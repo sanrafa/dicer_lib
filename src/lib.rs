@@ -4,13 +4,16 @@ extern crate pest_derive;
 #[macro_use]
 extern crate anyhow;
 mod dice;
+mod pool_parser;
 mod roll_parser;
 
+pub use pool_parser::execute_pool as pool;
 pub use roll_parser::execute_roll as roll;
 
 #[cfg(test)]
 mod tests {
     use crate::dice::*;
+    use crate::pool_parser::execute_pool;
     use crate::roll_parser::execute_roll;
 
     #[test]
@@ -30,7 +33,7 @@ mod tests {
     }
 
     #[test]
-    fn invalid_input() {
+    fn invalid_roll() {
         let result = execute_roll(".");
         assert!(result.is_err());
 
@@ -47,6 +50,27 @@ mod tests {
         assert!(result.is_err());
 
         let result = execute_roll("*4d6!^");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn invalid_pool() {
+        let result = execute_pool(".", 10);
+        assert!(result.is_err());
+
+        let result = execute_pool("      ", 10);
+        assert!(result.is_err());
+
+        let result = execute_pool("2+3d6", 10);
+        assert!(result.is_err());
+
+        let result = execute_pool("", 10);
+        assert!(result.is_err());
+
+        let result = execute_pool("10d28+", 10);
+        assert!(result.is_err());
+
+        let result = execute_pool("4d6!+2_3", 10);
         assert!(result.is_err());
     }
 
@@ -69,6 +93,33 @@ mod tests {
 
         let result = execute_roll("-50 + (-30) + 10").unwrap();
         assert_eq!(result, -70);
+    }
+
+    #[test]
+    fn pool() {
+        let result = execute_pool("1+2+3", 10).unwrap();
+        assert_eq!(result.len(), 6);
+        assert_eq!(result.iter().find(|x| x < &&1 || x > &&10), None);
+
+        let result = execute_pool("4+16-10", 6).unwrap();
+        assert_eq!(result.len(), 10);
+        assert_eq!(result.iter().find(|x| x < &&1 || x > &&6), None);
+
+        let result = execute_pool("3d6+4d10", 6).unwrap();
+        assert_eq!(result.len(), 7);
+        assert_eq!(result.iter().find(|x| x < &&1 || x > &&10), None);
+
+        let result = execute_pool("20d2!", 6).unwrap();
+        assert!(result.len() >= 20);
+        assert_eq!(result.iter().find(|x| x < &&1 || x > &&2), None);
+
+        let result = execute_pool("3d6-4", 6).unwrap();
+        assert!(result.len() == 1);
+        assert_eq!(result.iter().find(|x| x == &&0), Some(&0));
+
+        let result = execute_pool("10d4-7", 6).unwrap();
+        assert!(result.len() == 3);
+        assert_eq!(result.iter().find(|x| x < &&1 || x > &&4), None);
     }
 
     #[test]

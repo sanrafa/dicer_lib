@@ -1,0 +1,14 @@
+WHITESPACE = _{ " " }
+
+pool     = _{ SOI ~ expr ~ EOI }
+    expr     =  { explicit | implicit }
+        implicit =  _{ int ~ (infix ~ int)* }
+        // explicit dice rolls cannot have leading integer
+        explicit =  _{ (exploded | dice) ~ (infix ~ primary)* }
+    infix    = _{ add | subtract }
+        add      =  { "+" }
+        subtract =  { "-" }
+    primary  = _{ exploded | dice | int }
+        int      = @{ (ASCII_NONZERO_DIGIT ~ ASCII_DIGIT+ | ASCII_DIGIT) }
+        dice     = ${ int ~ "d" ~ int }
+        exploded = ${ dice ~ "!" }

@@ -5,7 +5,7 @@ use pest::pratt_parser::PrattParser;
 use pest::Parser;
 
 #[derive(Parser)]
-#[grammar = "roll_parser/roll.pest"]
+#[grammar = "roll.pest"]
 pub struct RollParser;
 
 lazy_static::lazy_static! {

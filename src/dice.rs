@@ -20,3 +20,13 @@ pub fn explode(total: i32, faces: i32) -> i32 {
         .collect();
     [initial, exploded].concat().iter().sum()
 }
+
+pub fn explode_pool(total: i32, faces: i32) -> Vec<i32> {
+    let initial = throw(total, faces);
+    let exploded: Vec<i32> = initial
+        .iter()
+        .filter(|x| **x == faces)
+        .map(|_| roll(1, faces))
+        .collect();
+    [initial, exploded].concat()
+}
