@@ -12,11 +12,17 @@ Returns summed output based on dice roll/expression.
 
 Supports addition, subtration, multiplication, and division. Expressions can use parentheses.
 
-### `pool (input: &str, base: i32) -> Result<Vec<i32>>`
+### `pool (input: &str, base: i32, threshold: f64) -> Result<Vec<(i32, bool)>>`
 
 Returns a vector of numbers based on dice roll/expression.
 
-Parameter `base` represents the type of dice to use when not specified. Ex. `pool("2+2", 10)` is equivalent to `4d10`.
+- `base` represents the type of dice to use when not specified.
+
+  - E.g. `pool("2+2", 10)` is equivalent to `4d10`.
+
+- `threshold` determines the minimum required for a successful dice roll.
+  - If less than 1, minimum equals `threshold * die_faces + 1` (rounded down)
+  - If greater than 1, `minimum = threshold`
 
 Only supports addition and subtraction. Subtraction truncates the pool by number of dice specificed - type is irrelevant. If more dice are subtracted than exists in the pool, returns `[0]` (automatic failure).
 

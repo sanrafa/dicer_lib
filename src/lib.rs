@@ -55,22 +55,22 @@ mod tests {
 
     #[test]
     fn invalid_pool() {
-        let result = execute_pool(".", 10);
+        let result = execute_pool(".", 10, 0.5);
         assert!(result.is_err());
 
-        let result = execute_pool("      ", 10);
+        let result = execute_pool("      ", 10, 0.5);
         assert!(result.is_err());
 
-        let result = execute_pool("2+3d6", 10);
+        let result = execute_pool("2+3d6", 10, 0.5);
         assert!(result.is_err());
 
-        let result = execute_pool("", 10);
+        let result = execute_pool("", 10, 0.5);
         assert!(result.is_err());
 
-        let result = execute_pool("10d28+", 10);
+        let result = execute_pool("10d28+", 10, 0.5);
         assert!(result.is_err());
 
-        let result = execute_pool("4d6!+2_3", 10);
+        let result = execute_pool("4d6!+2_3", 10, 0.5);
         assert!(result.is_err());
     }
 
@@ -97,29 +97,45 @@ mod tests {
 
     #[test]
     fn pool() {
-        let result = execute_pool("1+2+3", 10).unwrap();
+        let result = execute_pool("1+2+3", 10, 11.0).unwrap();
         assert_eq!(result.len(), 6);
-        assert_eq!(result.iter().find(|x| x < &&1 || x > &&10), None);
+        assert_eq!(
+            result
+                .iter()
+                .find(|(x, y)| x < &&1 || x > &&10 || *y == true),
+            None
+        );
 
-        let result = execute_pool("4+16-10", 6).unwrap();
+        let result = execute_pool("4+16-10", 6, 0.5).unwrap();
         assert_eq!(result.len(), 10);
-        assert_eq!(result.iter().find(|x| x < &&1 || x > &&6), None);
+        assert_eq!(result.iter().find(|(x, _)| x < &&1 || x > &&6), None);
 
-        let result = execute_pool("3d6+4d10", 6).unwrap();
+        let result = execute_pool("3d6+4d10", 6, 0.0).unwrap();
         assert_eq!(result.len(), 7);
-        assert_eq!(result.iter().find(|x| x < &&1 || x > &&10), None);
+        assert_eq!(
+            result
+                .iter()
+                .find(|(x, y)| x < &&1 || x > &&10 || *y == false),
+            None
+        );
 
-        let result = execute_pool("20d2!", 6).unwrap();
+        let result = execute_pool("20d2!", 6, 3.0).unwrap();
         assert!(result.len() >= 20);
-        assert_eq!(result.iter().find(|x| x < &&1 || x > &&2), None);
+        assert_eq!(
+            result
+                .iter()
+                .find(|(x, y)| x < &&1 || x > &&2 || *y == true),
+            None
+        );
 
-        let result = execute_pool("3d6-4", 6).unwrap();
+        let result = execute_pool("3d6-4", 6, 0.5).unwrap();
         assert!(result.len() == 1);
-        assert_eq!(result.iter().find(|x| x == &&0), Some(&0));
+        assert_eq!(result.iter().next().unwrap(), &(0, false));
 
-        let result = execute_pool("10d4-7", 6).unwrap();
-        assert!(result.len() == 3);
-        assert_eq!(result.iter().find(|x| x < &&1 || x > &&4), None);
+        let result = execute_pool("100d4-7", 6, 1.0).unwrap();
+        assert!(result.len() == 93);
+        assert_eq!(result.iter().find(|(x, _)| x < &&1 || x > &&4), None);
+        assert!(result.iter().find(|(_, y)| *y == true).is_some());
     }
 
     #[test]

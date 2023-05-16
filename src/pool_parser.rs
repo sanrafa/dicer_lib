@@ -1,4 +1,4 @@
-use super::dice::{explode_pool, throw};
+use super::dice::{explode_pool, throw_pool};
 use anyhow::Result;
 use pest::iterators::Pairs;
 use pest::pratt_parser::PrattParser;
@@ -18,7 +18,12 @@ lazy_static::lazy_static! {
     };
 }
 
-fn parse_pool(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>, base: i32) -> Vec<i32> {
+fn parse_pool(
+    pairs: Pairs<Rule>,
+    pratt: &PrattParser<Rule>,
+    base: i32,
+    threshold: f64,
+) -> Vec<(i32, bool)> {
     pratt
         .map_primary(|p| match p.as_rule() {
             Rule::exploded => {
@@ -26,17 +31,17 @@ fn parse_pool(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>, base: i32) -> Vec<i
                 let mut iter = die.into_inner().take(2);
                 let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
                 let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
-                return explode_pool(total, faces);
+                explode_pool(total, faces, threshold)
             }
             Rule::dice => {
                 let mut iter = p.into_inner().take(2);
                 let total = iter.next().unwrap().as_str().parse::<i32>().unwrap();
                 let faces = iter.next().unwrap().as_str().parse::<i32>().unwrap();
-                throw(total, faces)
+                throw_pool(total, faces, threshold)
             }
             Rule::int => {
                 let total = p.as_str().parse::<i32>().unwrap();
-                throw(total, base)
+                throw_pool(total, base, threshold)
             }
             rule => unreachable!("Unexpected token: {:?}", rule),
         })
@@ -49,7 +54,7 @@ fn parse_pool(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>, base: i32) -> Vec<i
                     lhs[..end].to_vec()
                 } else {
                     // inherent failure if subtracting more dice than already in pool
-                    vec![0]
+                    vec![(0, false)]
                 }
             }
             rule => unreachable!("Unexpected token: {:?}", rule),
@@ -57,13 +62,14 @@ fn parse_pool(pairs: Pairs<Rule>, pratt: &PrattParser<Rule>, base: i32) -> Vec<i
         .parse(pairs)
 }
 
-pub fn execute_pool(input: &str, base: i32) -> Result<Vec<i32>> {
+pub fn execute_pool(input: &str, base: i32, threshold: f64) -> Result<Vec<(i32, bool)>> {
     match PoolParser::parse(Rule::pool, input) {
         Ok(pairs) => match PoolParser::parse(Rule::expr, pairs.as_str()) {
             Ok(mut pairs) => Ok(parse_pool(
                 pairs.next().unwrap().into_inner(),
                 &PRATT_POOL,
                 base,
+                threshold,
             )),
             Err(_) => Err(anyhow!(
                 "Expressions mixing dice and integers cannot start with an integer."
