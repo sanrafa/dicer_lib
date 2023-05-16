@@ -24,7 +24,7 @@ Returns a vector of numbers based on dice roll/expression.
   - If less than 1, minimum equals `threshold * die_faces + 1` (rounded down)
   - If greater than 1, `minimum = threshold`
 
-Only supports addition and subtraction. Subtraction truncates the pool by number of dice specificed - type is irrelevant. If more dice are subtracted than exists in the pool, returns `[0]` (automatic failure).
+Only supports addition and subtraction. Subtraction truncates the pool by number of dice specificed - type is irrelevant. If more dice are subtracted than exists in the pool, returns `[(0, false)]` (automatic failure).
 
 NOTE: Pools combining dice and integers cannot begin with an integer. `2+1d10` is invalid, but `1d10+2` is allowed.
 
